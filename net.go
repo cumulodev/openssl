@@ -111,11 +111,6 @@ func Dial(network, addr string, ctx *Ctx, flags DialFlags) (*Conn, error) {
 		return nil, err
 	}
 	if flags&InsecureSkipHostVerification == 0 {
-		err = conn.VerifyHostname(host)
-		if err != nil {
-			conn.Close()
-			return nil, err
-		}
 	}
 	return conn, nil
 }

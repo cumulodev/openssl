@@ -62,30 +62,14 @@ static long SSL_CTX_set_tmp_ecdh_not_a_macro(SSL_CTX* ctx, EC_KEY *key) {
 #define SSL_OP_NO_COMPRESSION 0
 #endif
 
-static const SSL_METHOD *OUR_TLSv1_1_method() {
-#if defined(TLS1_1_VERSION) && !defined(OPENSSL_SYSNAME_MACOSX)
-    return TLSv1_1_method();
-#else
-    return NULL;
-#endif
-}
-
-static const SSL_METHOD *OUR_TLSv1_2_method() {
-#if defined(TLS1_2_VERSION) && !defined(OPENSSL_SYSNAME_MACOSX)
-    return TLSv1_2_method();
-#else
-    return NULL;
-#endif
-}
-
 extern int verify_cb(int ok, X509_STORE_CTX* store);
+
 */
 import "C"
 
 import (
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"runtime"
 	"unsafe"
@@ -130,11 +114,11 @@ func newCtx(method *C.SSL_METHOD) (*Ctx, error) {
 type SSLVersion int
 
 const (
-	SSLv2	SSLVersion = 0x01
-	SSLv3   SSLVersion = 0x02 // Vulnerable to "POODLE" attack.
-	TLSv1   SSLVersion = 0x03
-	TLSv1_1 SSLVersion = 0x04
-	TLSv1_2 SSLVersion = 0x05
+	SSLv2 SSLVersion = 0x01
+	SSLv3 SSLVersion = 0x02 // Vulnerable to "POODLE" attack.
+	TLSv1 SSLVersion = 0x03
+	//	TLSv1_1 SSLVersion = 0x04
+	//	TLSv1_2 SSLVersion = 0x05
 
 	// Make sure to disable SSLv2 and SSLv3 if you use this. SSLv3 is vulnerable
 	// to the "POODLE" attack, and SSLv2 is what, just don't even.
@@ -152,10 +136,10 @@ func NewCtxWithVersion(version SSLVersion) (*Ctx, error) {
 		method = C.SSLv3_method()
 	case TLSv1:
 		method = C.TLSv1_method()
-	case TLSv1_1:
-		method = C.OUR_TLSv1_1_method()
-	case TLSv1_2:
-		method = C.OUR_TLSv1_2_method()
+		/*	case TLSv1_1:
+				method = C.OUR_TLSv1_1_method()
+			case TLSv1_2:
+				method = C.OUR_TLSv1_2_method() */
 	case AnyVersion:
 		method = C.SSLv23_method()
 	}
@@ -172,63 +156,6 @@ func NewCtx() (*Ctx, error) {
 		c.SetOptions(NoSSLv2 | NoSSLv3)
 	}
 	return c, err
-}
-
-// NewCtxFromFiles calls NewCtx, loads the provided files, and configures the
-// context to use them.
-func NewCtxFromFiles(cert_file string, key_file string) (*Ctx, error) {
-	ctx, err := NewCtx()
-	if err != nil {
-		return nil, err
-	}
-
-	cert_bytes, err := ioutil.ReadFile(cert_file)
-	if err != nil {
-		return nil, err
-	}
-
-	certs := SplitPEM(cert_bytes)
-	if len(certs) == 0 {
-		return nil, fmt.Errorf("No PEM certificate found in '%s'", cert_file)
-	}
-	first, certs := certs[0], certs[1:]
-	cert, err := LoadCertificateFromPEM(first)
-	if err != nil {
-		return nil, err
-	}
-
-	err = ctx.UseCertificate(cert)
-	if err != nil {
-		return nil, err
-	}
-
-	for _, pem := range certs {
-		cert, err := LoadCertificateFromPEM(pem)
-		if err != nil {
-			return nil, err
-		}
-		err = ctx.AddChainCertificate(cert)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	key_bytes, err := ioutil.ReadFile(key_file)
-	if err != nil {
-		return nil, err
-	}
-
-	key, err := LoadPrivateKeyFromPEM(key_bytes)
-	if err != nil {
-		return nil, err
-	}
-
-	err = ctx.UsePrivateKey(key)
-	if err != nil {
-		return nil, err
-	}
-
-	return ctx, nil
 }
 
 // EllipticCurve repesents the ASN.1 OID of an elliptic curve.
@@ -315,22 +242,6 @@ func NewCertificateStore() (*CertificateStore, error) {
 		C.X509_STORE_free(s.store)
 	})
 	return store, nil
-}
-
-// Parse a chained PEM file, loading all certificates into the Store.
-func (s *CertificateStore) LoadCertificatesFromPEM(data []byte) error {
-	pems := SplitPEM(data)
-	for _, pem := range pems {
-		cert, err := LoadCertificateFromPEM(pem)
-		if err != nil {
-			return err
-		}
-		err = s.AddCertificate(cert)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
 }
 
 // GetCertificateStore returns the context's certificate store that will be

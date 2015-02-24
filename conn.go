@@ -513,16 +513,6 @@ func (c *Conn) Write(b []byte) (written int, err error) {
 	return 0, err
 }
 
-// VerifyHostname pulls the PeerCertificate and calls VerifyHostname on the
-// certificate.
-func (c *Conn) VerifyHostname(host string) error {
-	cert, err := c.PeerCertificate()
-	if err != nil {
-		return err
-	}
-	return cert.VerifyHostname(host)
-}
-
 // LocalAddr returns the underlying connection's local address
 func (c *Conn) LocalAddr() net.Addr {
 	return c.conn.LocalAddr()
