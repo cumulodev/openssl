@@ -73,14 +73,10 @@ import (
 	"os"
 	"runtime"
 	"unsafe"
-
-	"github.com/spacemonkeygo/spacelog"
 )
 
 var (
 	ssl_ctx_idx = C.SSL_CTX_get_ex_new_index(0, nil, nil, nil, nil)
-
-	logger = spacelog.GetLogger()
 )
 
 type Ctx struct {
@@ -383,7 +379,6 @@ type VerifyCallback func(ok bool, store *CertificateStoreCtx) bool
 func verify_cb_thunk(p unsafe.Pointer, ok C.int, ctx *C.X509_STORE_CTX) C.int {
 	defer func() {
 		if err := recover(); err != nil {
-			logger.Critf("openssl: verify callback panic'd: %v", err)
 			os.Exit(1)
 		}
 	}()
