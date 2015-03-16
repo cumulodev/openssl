@@ -3,7 +3,7 @@ SSLDIR = ${CWD}/vendor/openssl-0.9.8ze
 BUILDDIR = ${CWD}/out
 OBJ = ${BUILDDIR}/lib/libcrypto.a ${BUILDDIR}/lib/libssl.a
 
-PKG_CONFIG_PATH = ${BUILDDIR}/lib/pkgconfig
+export PKG_CONFIG_PATH = ${BUILDDIR}/lib/pkgconfig
 
 .PHONY: all install clean
 
