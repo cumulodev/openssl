@@ -110,11 +110,11 @@ func newCtx(method *C.SSL_METHOD) (*Ctx, error) {
 type SSLVersion int
 
 const (
-	SSLv2 SSLVersion = 0x01
-	SSLv3 SSLVersion = 0x02 // Vulnerable to "POODLE" attack.
-	TLSv1 SSLVersion = 0x03
-	//	TLSv1_1 SSLVersion = 0x04
-	//	TLSv1_2 SSLVersion = 0x05
+	SSLv2   SSLVersion = 0x01
+	SSLv3   SSLVersion = 0x02 // Vulnerable to "POODLE" attack.
+	TLSv1   SSLVersion = 0x03
+	TLSv1_1 SSLVersion = 0x04
+	TLSv1_2 SSLVersion = 0x05
 
 	// Make sure to disable SSLv2 and SSLv3 if you use this. SSLv3 is vulnerable
 	// to the "POODLE" attack, and SSLv2 is what, just don't even.
@@ -132,10 +132,10 @@ func NewCtxWithVersion(version SSLVersion) (*Ctx, error) {
 		method = C.SSLv3_method()
 	case TLSv1:
 		method = C.TLSv1_method()
-		/*	case TLSv1_1:
-				method = C.OUR_TLSv1_1_method()
-			case TLSv1_2:
-				method = C.OUR_TLSv1_2_method() */
+	case TLSv1_1:
+		method = C.TLSv1_1_method()
+	case TLSv1_2:
+		method = C.TLSv1_2_method()
 	case AnyVersion:
 		method = C.SSLv23_method()
 	}
