@@ -11,12 +11,13 @@ all: ${OBJ}
 
 ${OBJ}:
 	mkdir -p ${BUILDDIR}
-	cd ${SSLDIR} && ./config --prefix=${BUILDDIR} --openssldir=${BUILDDIR} --no-shared
+	cd ${SSLDIR} && ./config --prefix=${BUILDDIR} --openssldir=${BUILDDIR} no-shared
 	make -C ${SSLDIR} depend
 	make -C ${SSLDIR}
 	make -C ${SSLDIR} install 
 
 install: ${OBJ}
+	patch -N -r - out/lib/pkgconfig/libcrypto.pc < libcrypto.patch
 	go install
 
 clean:
