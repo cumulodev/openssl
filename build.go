@@ -16,8 +16,7 @@
 
 package openssl
 
-// #cgo pkg-config: libssl
-// #cgo pkg-config: libcrypto
+// #cgo pkg-config: libssl libcrypto
 // #cgo LDFLAGS: -ldl
 // #cgo windows CFLAGS: -DWIN32_LEAN_AND_MEAN
 // #cgo darwin CFLAGS: -Wno-deprecated-declarations
