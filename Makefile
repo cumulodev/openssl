@@ -1,7 +1,7 @@
 NAME = openssl-1.0.2a
 SRC = https://www.openssl.org/source/$(NAME).tar.gz
 SRCDIR = vendor/$(NAME)
-PREFIX ?= build
+PREFIX ?= $(shell pwd)/build
 OBJ = $(PREFIX)/lib/libcrypto.a $(PREFIX)/lib/libssl.a
 
 export PKG_CONFIG_PATH = prebuilt/lib/pkgconfig
