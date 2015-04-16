@@ -18,6 +18,7 @@ $(OBJ):
 	make -C $(SRCDIR) install 
 
 install: $(OBJ)
+	patch -N -r - $(PKG_CONFIG_PATH)/libcrypto.pc < libcrypto.patch
 	go install -a
 
 $(SRCDIR):

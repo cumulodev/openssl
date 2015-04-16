@@ -1,0 +1,10 @@
+--- out/lib/pkgconfig/libcrypto.pc	2015-03-17 10:34:58.688145200 +0000
++++ out/lib/pkgconfig/libcrypto.pc	2015-03-17 10:41:07.604145200 +0000
+@@ -7,6 +7,6 @@
+ Description: OpenSSL cryptography library
+ Version: 1.0.2
+ Requires: 
+-Libs: -L${libdir} -lcrypto
++Libs: -L${libdir} -lcrypto -ldl
+ Libs.private: -ldl
+ Cflags: -I${includedir}
