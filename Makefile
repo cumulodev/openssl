@@ -1,4 +1,4 @@
-NAME = openssl-1.0.2a
+NAME = openssl-1.0.2d
 SRC = https://www.openssl.org/source/$(NAME).tar.gz
 SRCDIR = vendor/$(NAME)
 PREFIX ?= $(shell pwd)/build
@@ -19,7 +19,7 @@ $(OBJ):
 
 install: $(OBJ)
 	patch -N -r - $(PKG_CONFIG_PATH)/libcrypto.pc < libcrypto.patch
-	go install -a
+	go install
 
 $(SRCDIR):
 	wget $(SRC) -O vendor/$(NAME).tar.gz
