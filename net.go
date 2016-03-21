@@ -77,6 +77,14 @@ const (
 // This library is not nice enough to use the system certificate store by
 // default for you yet.
 func Dial(network, addr string, ctx *Ctx, flags DialFlags) (*Conn, error) {
+	return DialWithDialer(network, addr, ctx, flags, &net.Dialer{})
+}
+
+// DialWithDialer is a wrapper function which allows an additional parameter for a customized dialer objects
+func DialWithDialer(network, addr string, ctx *Ctx, flags DialFlags, dialer *net.Dialer) (*Conn, error) {
+	if dialer == nil {
+		dialer = &net.Dialer{}
+	}
 	host, _, err := net.SplitHostPort(addr)
 	if err != nil {
 		return nil, err
@@ -89,7 +97,7 @@ func Dial(network, addr string, ctx *Ctx, flags DialFlags) (*Conn, error) {
 		}
 		// TODO: use operating system default certificate chain?
 	}
-	c, err := net.Dial(network, addr)
+	c, err := dialer.Dial(network, addr)
 	if err != nil {
 		return nil, err
 	}
