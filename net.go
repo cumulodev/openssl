@@ -17,6 +17,7 @@ package openssl
 import (
 	"errors"
 	"net"
+	"time"
 )
 
 type listener struct {
@@ -76,15 +77,15 @@ const (
 // some certs to the certificate store of the client context you're using.
 // This library is not nice enough to use the system certificate store by
 // default for you yet.
-func Dial(network, addr string, ctx *Ctx, flags DialFlags, options ...func(net.Conn)) (*Conn, error) {
-	return DialWithDialer(network, addr, ctx, flags, &net.Dialer{}, options...)
+func Dial(network, addr string, ctx *Ctx, flags DialFlags) (*Conn, error) {
+	return DialWithDialer(network, addr, ctx, flags, &net.Dialer{})
 }
 
-// DialWithDialer is a wrapper function which allows an additional parameter for a customized dialer objects
-func DialWithDialer(network, addr string, ctx *Ctx, flags DialFlags, dialer *net.Dialer, options ...func(net.Conn)) (*Conn, error) {
-	if dialer == nil {
-		dialer = &net.Dialer{}
-	}
+// DialWithDialer connects to the given network address using dialer.Dial and
+// then initiates a TLS handshake, returning the resulting TLS connection. Any
+// timeout or deadline given in the dialer apply to connection and TLS
+// handshake as a whole.
+func DialWithDialer(network, addr string, ctx *Ctx, flags DialFlags, dialer *net.Dialer) (*Conn, error) {
 	host, _, err := net.SplitHostPort(addr)
 	if err != nil {
 		return nil, err
@@ -96,14 +97,24 @@ func DialWithDialer(network, addr string, ctx *Ctx, flags DialFlags, dialer *net
 		}
 		// TODO: use operating system default certificate chain?
 	}
+
 	c, err := dialer.Dial(network, addr)
 	if err != nil {
 		return nil, err
 	}
 
-	// apply options to connection
-	for _, opt := range options {
-		opt(c)
+	// We want the Timeout and Deadline values from dialer to cover the
+	// whole process: TCP connection and TLS handshake.
+	timeout := dialer.Timeout
+	if !dialer.Deadline.IsZero() {
+		deadlineTimeout := dialer.Deadline.Sub(time.Now())
+		if timeout == 0 || deadlineTimeout < timeout {
+			timeout = deadlineTimeout
+		}
+	}
+
+	if timeout > 0 {
+		c.SetDeadline(time.Now().Add(timeout))
 	}
 
 	conn, err := Client(c, ctx)
