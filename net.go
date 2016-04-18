@@ -76,12 +76,12 @@ const (
 // some certs to the certificate store of the client context you're using.
 // This library is not nice enough to use the system certificate store by
 // default for you yet.
-func Dial(network, addr string, ctx *Ctx, flags DialFlags) (*Conn, error) {
-	return DialWithDialer(network, addr, ctx, flags, &net.Dialer{})
+func Dial(network, addr string, ctx *Ctx, flags DialFlags, options ...func(net.Conn)) (*Conn, error) {
+	return DialWithDialer(network, addr, ctx, flags, &net.Dialer{}, options...)
 }
 
 // DialWithDialer is a wrapper function which allows an additional parameter for a customized dialer objects
-func DialWithDialer(network, addr string, ctx *Ctx, flags DialFlags, dialer *net.Dialer) (*Conn, error) {
+func DialWithDialer(network, addr string, ctx *Ctx, flags DialFlags, dialer *net.Dialer, options ...func(net.Conn)) (*Conn, error) {
 	if dialer == nil {
 		dialer = &net.Dialer{}
 	}
@@ -90,7 +90,6 @@ func DialWithDialer(network, addr string, ctx *Ctx, flags DialFlags, dialer *net
 		return nil, err
 	}
 	if ctx == nil {
-		var err error
 		ctx, err = NewCtx()
 		if err != nil {
 			return nil, err
@@ -101,6 +100,12 @@ func DialWithDialer(network, addr string, ctx *Ctx, flags DialFlags, dialer *net
 	if err != nil {
 		return nil, err
 	}
+
+	// apply options to connection
+	for _, opt := range options {
+		opt(c)
+	}
+
 	conn, err := Client(c, ctx)
 	if err != nil {
 		c.Close()
@@ -118,7 +123,6 @@ func DialWithDialer(network, addr string, ctx *Ctx, flags DialFlags, dialer *net
 		conn.Close()
 		return nil, err
 	}
-	if flags&InsecureSkipHostVerification == 0 {
-	}
+
 	return conn, nil
 }
